@@ -33,7 +33,7 @@ export default function Hero() {
           Samedi 11 Juillet 2026
         </p>
         <p className="text-md md:text-lg text-slate-500 mt-2">
-          Treillières & Ferme de Mazerolle
+          Treillières & Ferme de Mazerolles
         </p>
       </motion.div>
 

@@ -8,6 +8,7 @@ export interface RSVP {
   attendingLunch: boolean;
   attendingDinner: boolean;
   sleepingOnSite: boolean;
+  notAttending: boolean;
   dietaryRequirements?: string;
   message?: string;
   createdAt: number;

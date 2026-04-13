@@ -28,10 +28,11 @@ export default function RSVPForm() {
     defaultValues: {
       adults: 1,
       children: 0,
-      attendingCeremony: true,
-      attendingLunch: true,
-      attendingDinner: true,
+      attendingCeremony: false,
+      attendingLunch: false,
+      attendingDinner: false,
       sleepingOnSite: false,
+      notAttending: false,
     }
   });
 
@@ -71,12 +72,10 @@ export default function RSVPForm() {
   };
 
   const handleDelete = async (id: string) => {
-    if (confirm("Supprimer cette réponse ?")) {
-      try {
-        await deleteDoc(doc(db, "rsvps", id));
-      } catch (error) {
-        handleFirestoreError(error, OperationType.DELETE, `rsvps/${id}`);
-      }
+    try {
+      await deleteDoc(doc(db, "rsvps", id));
+    } catch (error) {
+      handleFirestoreError(error, OperationType.DELETE, `rsvps/${id}`);
     }
   };
 
@@ -108,10 +107,21 @@ export default function RSVPForm() {
   if (isAdmin && showAdminView) {
     const totalAdults = rsvps.reduce((acc, r) => acc + (r.adults || 0), 0);
     const totalChildren = rsvps.reduce((acc, r) => acc + (r.children || 0), 0);
-    const ceremonyCount = rsvps.filter(r => r.attendingCeremony).length;
-    const lunchCount = rsvps.filter(r => r.attendingLunch).length;
-    const dinnerCount = rsvps.filter(r => r.attendingDinner).length;
-    const sleepCount = rsvps.filter(r => r.sleepingOnSite).length;
+    
+    const ceremonyCount = rsvps.reduce((acc, r) => 
+      r.attendingCeremony ? acc + (r.adults || 0) + (r.children || 0) : acc, 0);
+    
+    const lunchCount = rsvps.reduce((acc, r) => 
+      r.attendingLunch ? acc + (r.adults || 0) + (r.children || 0) : acc, 0);
+    
+    const dinnerCount = rsvps.reduce((acc, r) => 
+      r.attendingDinner ? acc + (r.adults || 0) + (r.children || 0) : acc, 0);
+    
+    const sleepCount = rsvps.reduce((acc, r) => 
+      r.sleepingOnSite ? acc + (r.adults || 0) + (r.children || 0) : acc, 0);
+    
+    const absentCount = rsvps.reduce((acc, r) => 
+      r.notAttending ? acc + (r.adults || 0) + (r.children || 0) : acc, 0);
 
     return (
       <section className="py-20 px-4 max-w-5xl mx-auto">
@@ -123,13 +133,14 @@ export default function RSVPForm() {
           </div>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-6 gap-4 mb-8">
+        <div className="grid grid-cols-2 md:grid-cols-7 gap-4 mb-8">
           <StatCard label="Adultes" value={totalAdults} />
           <StatCard label="Enfants" value={totalChildren} />
           <StatCard label="Mairie" value={ceremonyCount} />
           <StatCard label="Midi" value={lunchCount} />
           <StatCard label="Soir" value={dinnerCount} />
           <StatCard label="Dodo" value={sleepCount} />
+          <StatCard label="Absent" value={absentCount} />
         </div>
 
         <div className="bg-white rounded-3xl shadow-xl overflow-hidden border border-brand-rose/20">
@@ -143,6 +154,7 @@ export default function RSVPForm() {
                   <th className="p-4">Midi</th>
                   <th className="p-4">Soir</th>
                   <th className="p-4">Dodo</th>
+                  <th className="p-4">Absent</th>
                   <th className="p-4">Message</th>
                   <th className="p-4">Actions</th>
                 </tr>
@@ -156,6 +168,7 @@ export default function RSVPForm() {
                     <td className="p-4">{rsvp.attendingLunch ? "✅" : "❌"}</td>
                     <td className="p-4">{rsvp.attendingDinner ? "✅" : "❌"}</td>
                     <td className="p-4">{rsvp.sleepingOnSite ? "✅" : "❌"}</td>
+                    <td className="p-4">{rsvp.notAttending ? "🚫" : "✅"}</td>
                     <td className="p-4 text-sm text-slate-500 max-w-xs truncate" title={rsvp.message}>
                       {rsvp.message || "-"}
                     </td>
@@ -231,86 +244,116 @@ export default function RSVPForm() {
         <CardContent className="p-8">
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             <div className="space-y-2">
-              <Label htmlFor="name">Nom de la famille / Personne</Label>
+              <Label htmlFor="name" className="text-black">Nom de la famille / Personne</Label>
               <Input 
                 id="name" 
                 placeholder="Ex: Famille Martin" 
                 {...register("name", { required: "Ce champ est obligatoire" })}
-                className="border-brand-rose/50 focus-visible:ring-brand-rose-dark"
+                className="border-brand-rose/50 focus-visible:ring-brand-rose-dark text-black placeholder:text-slate-400"
               />
               {errors.name && <p className="text-xs text-red-500">{errors.name.message}</p>}
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="adults">Nombre d'adultes</Label>
+                <Label htmlFor="adults" className="text-black">Nombre d'adultes</Label>
                 <Input 
                   id="adults" 
                   type="number" 
                   min={1}
                   {...register("adults", { valueAsNumber: true })}
-                  className="border-brand-rose/50 focus-visible:ring-brand-rose-dark"
+                  className="border-brand-rose/50 focus-visible:ring-brand-rose-dark text-black"
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="children">Nombre d'enfants</Label>
+                <Label htmlFor="children" className="text-black">Nombre d'enfants</Label>
                 <Input 
                   id="children" 
                   type="number" 
                   min={0}
                   {...register("children", { valueAsNumber: true })}
-                  className="border-brand-rose/50 focus-visible:ring-brand-rose-dark"
+                  className="border-brand-rose/50 focus-visible:ring-brand-rose-dark text-black"
                 />
               </div>
             </div>
 
             <div className="space-y-4 bg-brand-beige/50 p-6 rounded-2xl">
-              <p className="font-medium text-brand-olive mb-2">Serez-vous parmi nous ?</p>
+              <p className="font-normal text-black mb-2">Serez-vous parmi nous ?</p>
               
               <div className="flex items-center space-x-3">
                 <Checkbox 
-                  id="attendingCeremony" 
-                  checked={watch("attendingCeremony")}
-                  onCheckedChange={(checked) => setValue("attendingCeremony", checked as boolean)}
+                  id="notAttending" 
+                  checked={watch("notAttending")}
+                  onCheckedChange={(checked) => {
+                    const isNotAttending = checked as boolean;
+                    setValue("notAttending", isNotAttending);
+                    if (isNotAttending) {
+                      setValue("attendingCeremony", false);
+                      setValue("attendingLunch", false);
+                      setValue("attendingDinner", false);
+                      setValue("sleepingOnSite", false);
+                      setValue("adults", 0);
+                      setValue("children", 0);
+                    } else {
+                      setValue("adults", 1);
+                    }
+                  }}
                 />
-                <Label htmlFor="attendingCeremony" className="cursor-pointer">Présent à la cérémonie (Mairie) 🏛️</Label>
+                <Label htmlFor="notAttending" className="cursor-pointer font-normal text-black">Ne sera malheureusement pas présent 😔</Label>
               </div>
 
-              <div className="flex items-center space-x-3">
-                <Checkbox 
-                  id="attendingLunch" 
-                  checked={watch("attendingLunch")}
-                  onCheckedChange={(checked) => setValue("attendingLunch", checked as boolean)}
-                />
-                <Label htmlFor="attendingLunch" className="cursor-pointer">Présent au déjeuner 🍴</Label>
-              </div>
+              {!watch("notAttending") && (
+                <motion.div 
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  className="space-y-4 pt-4 border-t border-brand-rose/20"
+                >
+                  <div className="flex items-center space-x-3">
+                    <Checkbox 
+                      id="attendingCeremony" 
+                      checked={watch("attendingCeremony")}
+                      onCheckedChange={(checked) => setValue("attendingCeremony", checked as boolean)}
+                    />
+                    <Label htmlFor="attendingCeremony" className="cursor-pointer font-normal text-black">Présent à la cérémonie (Mairie) 🏛️</Label>
+                  </div>
 
-              <div className="flex items-center space-x-3">
-                <Checkbox 
-                  id="attendingDinner" 
-                  checked={watch("attendingDinner")}
-                  onCheckedChange={(checked) => setValue("attendingDinner", checked as boolean)}
-                />
-                <Label htmlFor="attendingDinner" className="cursor-pointer">Présent au dîner 🌙</Label>
-              </div>
+                  <div className="flex items-center space-x-3">
+                    <Checkbox 
+                      id="attendingLunch" 
+                      checked={watch("attendingLunch")}
+                      onCheckedChange={(checked) => setValue("attendingLunch", checked as boolean)}
+                    />
+                    <Label htmlFor="attendingLunch" className="cursor-pointer font-normal text-black">Présent au déjeuner 🍴</Label>
+                  </div>
 
-              <div className="flex items-center space-x-3">
-                <Checkbox 
-                  id="sleepingOnSite" 
-                  checked={watch("sleepingOnSite")}
-                  onCheckedChange={(checked) => setValue("sleepingOnSite", checked as boolean)}
-                />
-                <Label htmlFor="sleepingOnSite" className="cursor-pointer">Dort sur place (en dortoir) 🛌</Label>
-              </div>
+                  <div className="flex items-center space-x-3">
+                    <Checkbox 
+                      id="attendingDinner" 
+                      checked={watch("attendingDinner")}
+                      onCheckedChange={(checked) => setValue("attendingDinner", checked as boolean)}
+                    />
+                    <Label htmlFor="attendingDinner" className="cursor-pointer font-normal text-black">Présent au dîner 🌙</Label>
+                  </div>
+
+                  <div className="flex items-center space-x-3">
+                    <Checkbox 
+                      id="sleepingOnSite" 
+                      checked={watch("sleepingOnSite")}
+                      onCheckedChange={(checked) => setValue("sleepingOnSite", checked as boolean)}
+                    />
+                    <Label htmlFor="sleepingOnSite" className="cursor-pointer font-normal text-black">Dort sur place (en dortoir) 🛌</Label>
+                  </div>
+                </motion.div>
+              )}
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="message">Un petit mot pour Candice ?</Label>
+              <Label htmlFor="message" className="text-black">Un petit mot pour Candice ?</Label>
               <Textarea 
                 id="message" 
                 placeholder="Votre message..." 
                 {...register("message")}
-                className="border-brand-rose/50 focus-visible:ring-brand-rose-dark min-h-[100px]"
+                className="border-brand-rose/50 focus-visible:ring-brand-rose-dark min-h-[100px] text-black placeholder:text-slate-400"
               />
             </div>
 

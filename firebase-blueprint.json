@@ -22,6 +22,10 @@
           "type": "number",
           "description": "Nombre d'enfants"
         },
+        "attendingCeremony": {
+          "type": "boolean",
+          "description": "Présence à la cérémonie"
+        },
         "attendingLunch": {
           "type": "boolean",
           "description": "Présence au déjeuner"
@@ -33,6 +37,10 @@
         "sleepingOnSite": {
           "type": "boolean",
           "description": "Dort sur place"
+        },
+        "notAttending": {
+          "type": "boolean",
+          "description": "Ne sera pas présent"
         },
         "dietaryRequirements": {
           "type": "string",
@@ -47,7 +55,7 @@
           "description": "Timestamp de création"
         }
       },
-      "required": ["name", "adults", "children", "attendingLunch", "attendingDinner", "sleepingOnSite", "createdAt"]
+      "required": ["name", "adults", "children", "attendingCeremony", "attendingLunch", "attendingDinner", "sleepingOnSite", "notAttending", "createdAt"]
     }
   },
   "firestore": {

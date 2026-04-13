@@ -37,13 +37,15 @@ service cloud.firestore {
     }
 
     function isValidRSVP(data) {
-      return data.keys().hasAll(['name', 'adults', 'children', 'attendingLunch', 'attendingDinner', 'sleepingOnSite', 'createdAt']) &&
+      return data.keys().hasAll(['name', 'adults', 'children', 'attendingCeremony', 'attendingLunch', 'attendingDinner', 'sleepingOnSite', 'notAttending', 'createdAt']) &&
              data.name is string && data.name.size() > 0 && data.name.size() <= 100 &&
              data.adults is number && data.adults >= 0 &&
              data.children is number && data.children >= 0 &&
+             data.attendingCeremony is bool &&
              data.attendingLunch is bool &&
              data.attendingDinner is bool &&
              data.sleepingOnSite is bool &&
+             data.notAttending is bool &&
              data.createdAt is number &&
              (!('email' in data) || (data.email is string && data.email.size() <= 100)) &&
              (!('dietaryRequirements' in data) || (data.dietaryRequirements is string && data.dietaryRequirements.size() <= 500)) &&
